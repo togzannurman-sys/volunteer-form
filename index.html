@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Заявка волонтёра</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  /* ==== Цвета берутся из темы Telegram (светлая/тёмная), ниже — запасные ==== */
+  :root{
+    --bg: var(--tg-theme-bg-color, #ffffff);
+    --bg2: var(--tg-theme-secondary-bg-color, #f1f3f6);
+    --text: var(--tg-theme-text-color, #111418);
+    --hint: var(--tg-theme-hint-color, #7a818c);
+    --accent: var(--tg-theme-button-color, #2a86e6);
+    --accent-text: var(--tg-theme-button-text-color, #ffffff);
+    --ok: #1f9d55; --warn: #c7861b; --err: #d64545;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg2);color:var(--text);
+    font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+  main{max-width:560px;margin:0 auto;padding:12px 12px 120px}
+  h1{font-size:19px;margin:6px 4px 2px}
+  .sub{color:var(--hint);margin:0 4px 12px;font-size:13px}
+  .card{background:var(--bg);border-radius:14px;padding:14px;margin-bottom:12px}
+  .card h2{font-size:15px;margin:0 0 10px}
+  .rules{font-size:13.5px}
+  .rules p{margin:0 0 8px}
+  .rules p:last-child{margin:0}
+  .pill{display:inline-block;background:var(--bg2);border-radius:8px;padding:2px 8px;font-weight:600;white-space:nowrap}
+  label.f{display:block;font-size:13px;color:var(--hint);margin:10px 0 4px}
+  label.f:first-of-type{margin-top:0}
+  input[type=text],input[type=tel]{width:100%;font:inherit;color:var(--text);background:var(--bg2);
+    border:1.5px solid transparent;border-radius:10px;padding:10px 12px;outline:none}
+  input:focus{border-color:var(--accent)}
+  input.bad{border-color:var(--err)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{border:1.5px solid var(--bg2);background:var(--bg2);color:var(--text);border-radius:999px;
+    padding:7px 12px;font:inherit;font-size:14px;cursor:pointer}
+  .chip.on{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
+  .chip[disabled]{opacity:.45;cursor:default}
+  .quick{display:flex;gap:8px;margin-bottom:10px}
+  .quick button{flex:1;font:inherit;font-size:13.5px;padding:9px 6px;border-radius:10px;border:0;
+    background:var(--bg2);color:var(--accent);font-weight:600;cursor:pointer}
+  .day{padding:10px 0;border-top:1px solid var(--bg2)}
+  .day:first-of-type{border-top:0}
+  .day .dl{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  .day .dl b{font-size:15px}
+  .day .dl span{font-size:12.5px;color:var(--hint)}
+  .seg{display:grid;grid-template-columns:1fr 1fr 1fr 1.25fr;gap:4px;background:var(--bg2);border-radius:10px;padding:3px}
+  .seg button{font:inherit;font-size:13px;border:0;border-radius:8px;padding:8px 2px;background:transparent;
+    color:var(--text);cursor:pointer;line-height:1.15}
+  .seg button small{display:block;font-size:10.5px;opacity:.75}
+  .seg button.on{background:var(--accent);color:var(--accent-text);font-weight:600}
+  .seg button.on.none{background:var(--bg);color:var(--hint);box-shadow:0 0 0 1px rgba(0,0,0,.06)}
+  .bar{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--bg2);
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom));font-size:14px}
+  .bar .in{max-width:560px;margin:0 auto;display:flex;align-items:center;gap:10px;justify-content:space-between}
+  .bar .st{font-weight:600}
+  .bar .in>div:last-child{display:flex;gap:8px;flex-shrink:0}
+  .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
+  .btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:11px 16px;background:var(--accent);
+    color:var(--accent-text);cursor:pointer}
+  .btn.ghost{background:var(--bg2);color:var(--accent)}
+  .fallback{display:none}
+  body.browser .fallback{display:inline-block}
+  #review{display:none}
+  .rv-row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--bg2)}
+  .rv-row:first-child{border-top:0}
+  .rv-row span:last-child{font-weight:600;text-align:right}
+  .note{border-radius:10px;padding:10px 12px;font-size:13.5px;margin-top:10px}
+  .note.ok{background:rgba(31,157,85,.12)} .note.warn{background:rgba(199,134,27,.14)}
+  .errors{color:var(--err);font-size:13.5px;margin:0 4px 10px;display:none}
+  pre{white-space:pre-wrap;word-break:break-all;font-size:12px;background:var(--bg2);padding:10px;border-radius:10px}
+</style>
+</head>
+<body>
+<main>
+  <!-- ============ ЭКРАН 1: ЗАПОЛНЕНИЕ ============ -->
+  <section id="form">
+    <h1>Заявка волонтёра</h1>
+    <p class="sub" id="projTitle">World Aquatics Swimming World Cup</p>
+
+    <div class="card">
+      <h2>Проект</h2>
+      <div class="chips" id="projects"></div>
+    </div>
+
+    <div class="card rules">
+      <h2>Перед заполнением</h2>
+      <p>Смены фиксированные: <span class="pill">🌅 07:30–14:00</span> <span class="pill">🌇 15:00–20:00</span> или обе.</p>
+      <p>Для благодарственного письма, формы и аккредитации нужно отработать <b>минимум 4 рабочих дня</b>.</p>
+      <p>Отмечайте только те даты и смены, в которые вы <b>точно</b> сможете прийти.</p>
+      <p style="color:var(--hint)">Если нужно прийти позже или уйти раньше — сообщите координатору отдельно, такие случаи согласуются индивидуально.</p>
+    </div>
+
+    <div class="card">
+      <h2>О вас</h2>
+      <label class="f" for="fio">ФИО полностью (как в удостоверении)</label>
+      <input type="text" id="fio" autocomplete="name" placeholder="Фамилия Имя Отчество">
+      <label class="f" for="phone">Телефон</label>
+      <input type="tel" id="phone" autocomplete="tel" placeholder="+7 7__ ___ __ __">
+      <label class="f">Языки, на которых можете общаться</label>
+      <div class="chips" id="langs"></div>
+      <label class="f">Планируете также участвовать в World Wrestling Championship?</label>
+      <div class="chips" id="wr"></div>
+    </div>
+
+    <div class="card">
+      <h2>Когда вы можете работать</h2>
+      <div class="quick">
+        <button type="button" id="allFull">Все дни, обе смены</button>
+        <button type="button" id="clearAll">Очистить</button>
+      </div>
+      <div id="days"></div>
+    </div>
+
+    <p class="errors" id="errors"></p>
+  </section>
+
+  <!-- ============ ЭКРАН 2: ПРОВЕРКА ============ -->
+  <section id="review">
+    <h1>Проверьте заявку</h1>
+    <p class="sub">Если всё верно — отправьте. Бот пришлёт подтверждение.</p>
+    <div class="card" id="rvPerson"></div>
+    <div class="card" id="rvDays"></div>
+    <div id="preview"></div>
+  </section>
+</main>
+
+<div class="bar"><div class="in">
+  <div><div class="st" id="count">Выбрано дней: 0</div><div id="rule" style="font-size:12.5px"></div></div>
+  <div>
+    <button class="btn ghost fallback" id="fbBack" style="display:none">Изменить</button>
+    <button class="btn fallback" id="fbMain">Проверить</button>
+  </div>
+</div></div>
+
+<script>
+/* ======================= НАСТРОЙКИ =======================
+   Даты и смены меняются ТОЛЬКО здесь (и такие же ключи дат — в n8n, узел «Логика»). */
+const PROJECTS = {
+  SWIM:  { title: 'World Aquatics Swimming World Cup', icon: '🏊', active: true,
+           dates: ['2026-10-11','2026-10-12','2026-10-13','2026-10-14','2026-10-15','2026-10-16','2026-10-17'] },
+  WREST: { title: 'World Wrestling Championship', icon: '🤼', active: false, dates: [] }
+};
+const MIN_DAYS = 4;
+const LANGS = [['kk','Қазақша'],['ru','Русский'],['en','English'],['zh','中文'],['tr','Türkçe'],['other','Другой']];
+const WR = [['yes','Да'],['maybe','Пока не знаю'],['no','Нет']];
+/* Значение дня: 0 — не могу, 1 — утро, 2 — вечер, 3 — обе смены */
+const OPTS = [[0,'Не могу',''],[1,'Утро','07:30–14:00'],[2,'Вечер','15:00–20:00'],[3,'Весь день','обе смены']];
+const TEXT = {0:'—',1:'🌅 07:30–14:00',2:'🌇 15:00–20:00',3:'☀️ обе смены (07:30–20:00)'};
+/* ========================================================= */
+
+const tg = window.Telegram && window.Telegram.WebApp;
+const inTelegram = !!(tg && tg.initData);
+if (!inTelegram) document.body.classList.add('browser');
+if (tg) { tg.ready(); tg.expand(); }
+
+const q = new URLSearchParams(location.search);
+let project = PROJECTS[q.get('p')] && PROJECTS[q.get('p')].active ? q.get('p') : 'SWIM';
+const state = { days: {}, langs: new Set((q.get('l')||'').split(',').filter(Boolean)), wr: q.get('w') || '' };
+const $ = id => document.getElementById(id);
+
+const dayKey = iso => { const d = new Date(iso+'T00:00:00'); return ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'][d.getMonth()] + d.getDate(); };
+const dayLabel = iso => new Date(iso+'T00:00:00').toLocaleDateString('ru-RU',{weekday:'short',day:'numeric',month:'long'});
+const dayShort = iso => new Date(iso+'T00:00:00').toLocaleDateString('ru-RU',{weekday:'short',day:'2-digit',month:'2-digit'});
+
+/* Предзаполнение (при «Изменить заявку» бот передаёт прошлые ответы в ссылке) */
+$('fio').value = q.get('n') || '';
+$('phone').value = q.get('t') || '';
+const pre = q.get('d') || '';
+function initDays(){
+  state.days = {};
+  PROJECTS[project].dates.forEach((iso,i) => { const v = +pre[i]; state.days[iso] = v>=0 && v<=3 ? v : 0; });
+}
+
+function renderProjects(){
+  $('projects').innerHTML = '';
+  Object.entries(PROJECTS).forEach(([code,p]) => {
+    const b = document.createElement('button');
+    b.type='button'; b.className = 'chip' + (code===project?' on':'');
+    b.textContent = p.icon + ' ' + (code==='SWIM'?'Swimming':'Wrestling') + (p.active?'':' — скоро');
+    b.disabled = !p.active;
+    b.onclick = () => { project = code; initDays(); render(); };
+    $('projects').appendChild(b);
+  });
+  $('projTitle').textContent = PROJECTS[project].title;
+}
+function renderChips(el, list, isOn, toggle){
+  el.innerHTML='';
+  list.forEach(([code,label]) => {
+    const b=document.createElement('button'); b.type='button';
+    b.className='chip'+(isOn(code)?' on':''); b.textContent=label;
+    b.onclick=()=>{toggle(code); renderChips(el,list,isOn,toggle);};
+    el.appendChild(b);
+  });
+}
+function renderDays(){
+  const box = $('days'); box.innerHTML='';
+  PROJECTS[project].dates.forEach(iso => {
+    const row = document.createElement('div'); row.className='day';
+    const v = state.days[iso];
+    row.innerHTML = `<div class="dl"><b>${dayLabel(iso)}</b><span>${v?TEXT[v].replace(/^\S+ /,''):'не отмечено'}</span></div>`;
+    const seg = document.createElement('div'); seg.className='seg';
+    OPTS.forEach(([val,label,sub]) => {
+      const b=document.createElement('button'); b.type='button';
+      b.className = (v===val?'on':'') + (val===0?' none':'');
+      b.innerHTML = label + (sub?`<small>${sub}</small>`:'');
+      b.onclick = () => { state.days[iso]=val; if(tg&&tg.HapticFeedback) tg.HapticFeedback.selectionChanged(); renderDays(); updateBar(); };
+      seg.appendChild(b);
+    });
+    row.appendChild(seg); box.appendChild(row);
+  });
+}
+function stats(){
+  const vals = PROJECTS[project].dates.map(d => state.days[d]);
+  const days = vals.filter(v=>v>0).length, full = vals.filter(v=>v===3).length;
+  return {days, full};
+}
+function updateBar(){
+  const s = stats();
+  $('count').textContent = `Выбрано дней: ${s.days}` + (s.full?` · полных: ${s.full}`:'');
+  $('rule').innerHTML = s.days>=MIN_DAYS ? `<span class="ok">✓ условие ${MIN_DAYS} дней выполнено</span>`
+                      : `<span class="warn">нужно минимум ${MIN_DAYS} дня для сертификата</span>`;
+  if (tg && inTelegram && mode==='form') { tg.MainButton.setText(`Проверить заявку (${s.days} дн.)`); tg.MainButton.show(); }
+}
+function render(){
+  renderProjects();
+  renderChips($('langs'), LANGS, c=>state.langs.has(c), c=>state.langs.has(c)?state.langs.delete(c):state.langs.add(c));
+  renderChips($('wr'), WR, c=>state.wr===c, c=>{state.wr=c;});
+  renderDays(); updateBar();
+}
+
+$('allFull').onclick = () => { PROJECTS[project].dates.forEach(d=>state.days[d]=3); renderDays(); updateBar(); };
+$('clearAll').onclick = () => { PROJECTS[project].dates.forEach(d=>state.days[d]=0); renderDays(); updateBar(); };
+
+function validate(){
+  const errs=[];
+  const fio=$('fio').value.trim().replace(/\s+/g,' ');
+  const phoneDigits=$('phone').value.replace(/\D/g,'');
+  $('fio').classList.toggle('bad', fio.split(' ').length<2);
+  $('phone').classList.toggle('bad', phoneDigits.length<10);
+  if (fio.split(' ').length<2) errs.push('Укажите фамилию и имя полностью.');
+  if (phoneDigits.length<10) errs.push('Укажите телефон (минимум 10 цифр).');
+  if (!state.wr) errs.push('Ответьте на вопрос про World Wrestling Championship.');
+  if (stats().days===0) errs.push('Отметьте хотя бы один день.');
+  $('errors').innerHTML = errs.join('<br>'); $('errors').style.display = errs.length?'block':'none';
+  if (errs.length) window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+  return errs.length===0;
+}
+function payload(){
+  const d={}; PROJECTS[project].dates.forEach(iso=>d[dayKey(iso)]=state.days[iso]);
+  return { v:1, p:project, n:$('fio').value.trim().replace(/\s+/g,' '), t:$('phone').value.trim(),
+           l:[...state.langs], w:state.wr, d };
+}
+
+let mode='form';
+function showReview(){
+  if(!validate()) return;
+  mode='review';
+  const s=stats(), p=payload();
+  const langNames = LANGS.filter(([c])=>state.langs.has(c)).map(x=>x[1]).join(', ') || '—';
+  $('rvPerson').innerHTML = `<h2>${PROJECTS[project].icon} ${PROJECTS[project].title}</h2>
+    <div class="rv-row"><span>ФИО</span><span>${esc(p.n)}</span></div>
+    <div class="rv-row"><span>Телефон</span><span>${esc(p.t)}</span></div>
+    <div class="rv-row"><span>Языки</span><span>${langNames}</span></div>
+    <div class="rv-row"><span>Wrestling тоже</span><span>${WR.find(x=>x[0]===p.w)[1]}</span></div>`;
+  const rows = PROJECTS[project].dates.filter(d=>state.days[d]>0)
+      .map(d=>`<div class="rv-row"><span>${dayShort(d)}</span><span>${TEXT[state.days[d]]}</span></div>`).join('');
+  $('rvDays').innerHTML = `<h2>Ваши смены</h2>${rows}
+    <div class="note ${s.days>=MIN_DAYS?'ok':'warn'}">Рабочих дней: <b>${s.days}</b>${s.full?`, из них полных: <b>${s.full}</b>`:''}.<br>
+    ${s.days>=MIN_DAYS?'✅ Условие минимум '+MIN_DAYS+' рабочих дней выполнено.'
+      :'⚠️ Меньше '+MIN_DAYS+' дней: заявку можно отправить, но для письма, формы и аккредитации нужно минимум '+MIN_DAYS+' рабочих дня.'}</div>`;
+  $('form').style.display='none'; $('review').style.display='block'; window.scrollTo(0,0);
+  if (inTelegram){ tg.MainButton.setText('✅ Подтвердить и отправить'); tg.BackButton.show(); }
+  $('fbMain').textContent='Подтвердить'; $('fbBack').style.display='inline-block';
+}
+function backToForm(){
+  mode='form'; $('review').style.display='none'; $('form').style.display='block'; $('preview').innerHTML='';
+  if (inTelegram) tg.BackButton.hide();
+  $('fbMain').textContent='Проверить'; $('fbBack').style.display='none'; updateBar();
+}
+function send(){
+  const data = JSON.stringify(payload());
+  if (inTelegram) { tg.sendData(data); }       // Telegram закроет форму и отправит данные боту
+  else { $('preview').innerHTML = '<div class="card"><h2>Тестовый режим (открыто не в Telegram)</h2><p class="sub" style="margin:0 0 8px">Боту ушло бы вот это:</p><pre>'+esc(data)+'</pre></div>'; }
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+if (tg) {
+  tg.MainButton.onClick(()=> mode==='form' ? showReview() : send());
+  tg.BackButton.onClick(backToForm);
+}
+$('fbMain').onclick = ()=> mode==='form' ? showReview() : send();
+$('fbBack').onclick = backToForm;
+
+initDays(); render();
+</script>
+</body>
+</html>
